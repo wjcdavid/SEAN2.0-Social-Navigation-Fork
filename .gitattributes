@@ -1,0 +1,12 @@
+Assets/Environments/SocNavBench/ZaraModelImproved.fbx filter=lfs diff=lfs merge=lfs -text
+Assets/Environments/SocNavBench/ZaraTextures/prop-buildings.fbx filter=lfs diff=lfs merge=lfs -text
+Assets/Resources/Prefabs/Community-informed[[:space:]]Model/Dog[[:space:]]Walker/Ch22_nonPBR@Holding[[:space:]]Walk.fbx filter=lfs diff=lfs merge=lfs -text
+Assets/Resources/Prefabs/Rocketbox[[:space:]]-[[:space:]]Original/wheelchair-male/Wheelchair.fbx filter=lfs diff=lfs merge=lfs -text
+Assets/Resources/Prefabs/Rocketbox[[:space:]]-[[:space:]]Original/wheelchairuser-female/Wheelchair[[:space:]](1).fbx filter=lfs diff=lfs merge=lfs -text
+
+# Store verified models as ordinary Git blobs.
+"/Assets/Environments/SocNavBench/ZaraModelImproved.fbx" -filter -diff -merge -text
+"/Assets/Environments/SocNavBench/ZaraTextures/prop-buildings.fbx" -filter -diff -merge -text
+"/Assets/Resources/Prefabs/Community-informed Model/Dog Walker/Ch22_nonPBR@Holding Walk.fbx" -filter -diff -merge -text
+"/Assets/Resources/Prefabs/Rocketbox - Original/wheelchair-male/Wheelchair.fbx" -filter -diff -merge -text
+"/Assets/Resources/Prefabs/Rocketbox - Original/wheelchairuser-female/Wheelchair (1).fbx" -filter -diff -merge -text
