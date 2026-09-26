@@ -13,7 +13,17 @@ namespace SEAN.Scenario.Trajectory
     {
         /// History of poses
         private LinearTrajectory _trajectory;
-        public LinearTrajectory trajectory { get { return _trajectory; } }
+        public LinearTrajectory trajectory
+        {
+            get
+            {
+                if (_trajectory == null)
+                {
+                    _trajectory = new LinearTrajectory(TrajectoryPoints);
+                }
+                return _trajectory;
+            }
+        }
 
         // Use the default game object unless mainGameObject is set (e.g. for the Robot's base_link)
         private GameObject _mainGameObject;
@@ -124,7 +134,10 @@ namespace SEAN.Scenario.Trajectory
 
         public virtual void Start()
         {
-            _trajectory = new LinearTrajectory(TrajectoryPoints);
+            if (_trajectory == null)
+            {
+                _trajectory = new LinearTrajectory(TrajectoryPoints);
+            }
         }
 
         public virtual void Update()

@@ -27,6 +27,7 @@ namespace SEAN.Tasks
         private float taskStartTime = 0f;
 
         private float timer = 0.0f;
+        [SerializeField]
         private int publishInterval = 10;
 
         private GameObject cube;
@@ -326,8 +327,19 @@ namespace SEAN.Tasks
             }
             if (robotStart)
             {
-                sean.robot.base_link.transform.rotation = robotStart.transform.rotation;
-                sean.robot.base_link.transform.position = robotStart.transform.position;
+                // For articulation-based robots (e.g. Unitree A1) the base_link IS the
+                // root ArticulationBody, whose pose only moves via TeleportRoot --
+                // assigning its Transform directly is ignored by the physics solver.
+                ArticulationBody artRoot = sean.robot.base_link.GetComponent<ArticulationBody>();
+                if (artRoot != null && artRoot.isRoot)
+                {
+                    artRoot.TeleportRoot(robotStart.transform.position, robotStart.transform.rotation);
+                }
+                else
+                {
+                    sean.robot.base_link.transform.rotation = robotStart.transform.rotation;
+                    sean.robot.base_link.transform.position = robotStart.transform.position;
+                }
             }
         }
 

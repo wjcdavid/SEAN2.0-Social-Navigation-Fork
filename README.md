@@ -1,3 +1,24 @@
+# SEAN 2.0 Social Navigation Extensions
+
+This project is based on **SEAN 2.0** and extends pedestrian behaviors,
+group reactions, special populations, and scenario generation.
+
+This version builds on `shengqu12/social_sim_unity`,
+branch `sheng/ped-behavior-v2`,
+commit `ba5b789578d8523e20cb697c884a4d4fd6814280`,
+with subsequent local modifications by Jiacheng Wang.
+
+Original copyright notices and license files are retained.
+Rocketbox files are included directly in this snapshot.
+
+## Opening the project
+
+Install Git LFS before cloning. After cloning, run `git lfs pull`.
+Open the project with the Unity version specified in
+`ProjectSettings/ProjectVersion.txt`.
+
+---
+
 # Social Environment Autonomous Navigation 2.0
 
 Documentation: [sean.interactive-machines.com](https://sean.interactive-machines.com)

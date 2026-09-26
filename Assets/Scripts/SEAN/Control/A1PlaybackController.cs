@@ -6,7 +6,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 
 namespace SEAN.Control
@@ -47,15 +46,24 @@ namespace SEAN.Control
 
     public class A1PlaybackController : MonoBehaviour
     {
-        private ArticulationBody[] articulationChain;
+        // Joints actually driven by the mocap, paired with their column index in
+        // the csv (== index in MocapFrame.JOINTS).
+        private struct DrivenJoint
+        {
+            public ArticulationBody body;
+            public int jointIndex;
+        }
+        private List<DrivenJoint> drivenJoints;
         private List<MocapFrame> frames;
-        //public float stiffness;
-        //public float damping;
-        public float forceLimit = 10;
-        //public float speed = 5f; // Units: degree/s
-        //public float torque = 100f; // Units: Nm or N
-        //public float acceleration = 5f;// Units: m/s^2 / degree/s^2
 
+        // PD position-drive gains applied to every actuated joint. This was the
+        // bug: the imported drives ship with stiffness/damping = 0, so the position
+        // drive produces no torque, the legs go limp and the robot collapses on Play.
+        public float stiffness = 1000f;
+        public float damping = 50f;
+        public float forceLimit = 500f;
+
+        // Advance one mocap frame every this many Update calls. Lower = faster playback.
         public int updateFrequency = 60;
         private int updateCount = 0;
         private int currentFrame = 0;
@@ -74,43 +82,66 @@ namespace SEAN.Control
 
         void Start()
         {
-            // Add Joint Control
-            articulationChain = this.GetComponentsInChildren<ArticulationBody>();
-            foreach (ArticulationBody joint in articulationChain)
+            // Configure each actuated joint's position drive. Without non-zero
+            // stiffness/damping the joints cannot hold any target and the robot
+            // just flops to the ground. We also seed the first mocap frame as the
+            // target so the robot stands the instant Play is pressed.
+            //
+            // NOTE: we intentionally do NOT add the URDF-importer JointControl
+            // component here. It calls Controller.UpdateControlType() on the
+            // (disabled) Controller on the root, which writes stiffness = damping = 0
+            // back onto every drive and undoes the gains set below.
+            drivenJoints = new List<DrivenJoint>();
+            foreach (ArticulationBody joint in GetComponentsInChildren<ArticulationBody>())
             {
-                joint.gameObject.AddComponent<JointControl>();
-                //joint.jointFriction = defDyanmicVal;
-                //joint.angularDamping = defDyanmicVal;
-                ArticulationDrive currentDrive = joint.xDrive;
-                currentDrive.forceLimit = forceLimit;
-                joint.xDrive = currentDrive;
+                if (joint.jointType == ArticulationJointType.FixedJoint)
+                {
+                    continue;
+                }
+
+                ArticulationDrive drive = joint.xDrive;
+                drive.stiffness = stiffness;
+                drive.damping = damping;
+                drive.forceLimit = forceLimit;
+
+                int jointIndex = System.Array.IndexOf(MocapFrame.JOINTS, joint.name);
+                if (jointIndex >= 0)
+                {
+                    if (frames.Count > 0)
+                    {
+                        drive.target = frames[0].joints[jointIndex];
+                    }
+                    drivenJoints.Add(new DrivenJoint { body = joint, jointIndex = jointIndex });
+                }
+
+                joint.xDrive = drive;
             }
         }
 
         private void Update()
         {
             updateCount++;
-            if (updateFrequency % updateCount != 0)
+            // Advance one mocap frame every `updateFrequency` calls. (The original
+            // `updateFrequency % updateCount` was inverted: it advanced on the
+            // divisors of 60 and then froze playback forever once updateCount > 60.)
+            if (frames.Count == 0 || updateCount % updateFrequency != 0)
             {
                 return;
             }
+
             currentFrame %= frames.Count;
-            int i = 0;
-            //print("joint count: " + articulationChain.Length);
-            foreach (ArticulationBody joint in articulationChain)
+            MocapFrame frame = frames[currentFrame];
+            foreach (DrivenJoint driven in drivenJoints)
             {
-                if (!MocapFrame.JOINTS.Contains(joint.name))
-                {
-                    continue;
-                }
-                RotateTo(joint, frames[currentFrame].joints[i++]);
+                // Map each joint to its own csv column by name rather than by
+                // enumeration order, so angles can't be assigned to the wrong leg.
+                RotateTo(driven.body, frame.joints[driven.jointIndex]);
             }
             currentFrame++;
         }
 
         void RotateTo(ArticulationBody articulation, float primaryAxisRotation)
         {
-            print("rotating " + articulation.name + " to " + primaryAxisRotation);
             var drive = articulation.xDrive;
             drive.target = primaryAxisRotation;
             articulation.xDrive = drive;

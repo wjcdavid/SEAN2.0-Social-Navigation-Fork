@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021, Members of Yale Interactive Machines Group, Yale University,
+// Copyright (c) 2021, Members of Yale Interactive Machines Group, Yale University,
 // Nathan Tsoi
 // All rights reserved.
 // This source code is licensed under the BSD-style license found in the
@@ -11,25 +11,24 @@ namespace SEAN.Util
     public class Unity
     {
         // from: https://answers.unity.com/questions/458207/copy-a-component-at-runtime.html
-        public static T CopyComponent<T>(T original, GameObject destination) where T : Component
+        public static T CopyComponent<T>(T original, GameObject destination)
+            where T : Component
         {
-            System.Type type = original.GetType();
-            Component copy = destination.AddComponent(type);
-            System.Reflection.FieldInfo[] fields = type.GetFields();
-            foreach (System.Reflection.FieldInfo field in fields)
+            if (original == null)
+                throw new System.ArgumentNullException(nameof(original));
+
+            if (destination == null)
+                throw new System.ArgumentNullException(nameof(destination));
+
+            if (original is Camera sourceCamera)
             {
-                field.SetValue(copy, field.GetValue(original));
+                Camera copiedCamera = destination.AddComponent<Camera>();
+                copiedCamera.CopyFrom(sourceCamera);
+                return copiedCamera as T;
             }
-            if (typeof(T) == typeof(Camera))
-            {
-                (copy as Camera).CopyFrom(original as Camera);
-            }
-            else
-            {
-                throw new System.ArgumentException("CopyComponent: Unsupported type: " + type);
-                // TODO: Also needs to iterate  SerializedProperties
-            }
-            return copy as T;
+
+            throw new System.ArgumentException(
+                "CopyComponent: Unsupported type: " + original.GetType());
         }
     }
 }

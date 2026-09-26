@@ -64,8 +64,12 @@ namespace SEAN.Metrics
                 print("Registering Metrics delegate");
             }
             sean.robotTask.onNewTask += OnNewTask;
-            // Make sure our robot has a count collision component
-            if (sean.robot.base_link.GetComponent<CountCollisions>() == null)
+            // Make sure our robot has a count collision component. Search the whole
+            // robot, not just base_link: CountCollisions requires a CapsuleCollider +
+            // Rigidbody, which on the Unitree A1 live on the (separate) base object,
+            // not on base_link (the root ArticulationBody). Adding it to base_link
+            // there would throw.
+            if (sean.robot.gameObject.GetComponentInChildren<CountCollisions>() == null)
             {
                 sean.robot.base_link.AddComponent<CountCollisions>();
             }

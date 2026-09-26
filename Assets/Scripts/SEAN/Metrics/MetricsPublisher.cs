@@ -16,12 +16,8 @@ namespace SEAN.Metrics
 
         public string TopicName = "/social_sim/metrics";
 
-        private RosMessageTypes.SocialSimRos.MTrialInfo trialInfoMessage;
-
-
         void Start()
         {
-            trialInfoMessage = new RosMessageTypes.SocialSimRos.MTrialInfo();
             ros = ROSConnection.instance;
             sean = SEAN.instance;
         }
@@ -29,6 +25,13 @@ namespace SEAN.Metrics
         private void Update()
         {
             if (!sean.robotTask.isRunning) { return; }
+
+            // Build a fresh message each publish. ROSConnection.Send() only enqueues
+            // the reference and serializes it later on the background connection thread,
+            // so mutating a shared/reused instance here races with that serialization
+            // (e.g. a freshly reallocated robot_poses array whose elements are still
+            // null) and throws NullReferenceException in SerializationStatements().
+            var trialInfoMessage = new RosMessageTypes.SocialSimRos.MTrialInfo();
             sean.clock.UpdateMHeader(trialInfoMessage.header);
 
             // Information about the current interaction
